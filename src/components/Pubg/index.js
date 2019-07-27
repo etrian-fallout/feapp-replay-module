@@ -1,11 +1,12 @@
 import React from "react";
 import Navigation from "../../Navigation";
+import UserForm from "./UserForm";
 
 const Pubg = () => {
   return (
     <div>
       <Navigation />
-      PUBG
+      <UserForm />
     </div>
   );
 };
