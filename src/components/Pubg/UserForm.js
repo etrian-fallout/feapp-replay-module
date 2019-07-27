@@ -1,4 +1,5 @@
 import React from "react";
+import { withRouter } from "react-router-dom";
 
 class UserForm extends React.Component {
   constructor(props) {
@@ -14,9 +15,9 @@ class UserForm extends React.Component {
   }
 
   handlePlatformChange(event) {
-      this.setState({
-          platform: event.target.value
-      });
+    this.setState({
+      platform: event.target.value
+    });
   }
 
   handleNameChange(event) {
@@ -26,29 +27,37 @@ class UserForm extends React.Component {
   }
 
   handleSubmit(event) {
-    console.log('a platform was submitted: ' + this.state.platform);
-    console.log("a name was submitted: " + this.state.name);
     event.preventDefault();
+    this.props.history.push(
+      "/pubg/" + this.state.name + "/" + this.state.platform
+    );
   }
 
   render() {
     return (
-      <form onSubmit={this.handleSubmit}>
-        <select id="platforms" name="plaforms" value={this.state.value} onChange={this.handlePlatformChange}>
-          <option value="steam">STEAM</option>
-          <option value="kakao">KAKAO</option>
-          <option value="xbox">XBOX</option>
-          <option value="psn">PSN</option>
-        </select>
-        <input
-          type="text"
-          value={this.state.value}
-          onChange={this.handleNameChange}
-        />
-        <input type="submit" value="Search" />
-      </form>
+      <div>
+        <form onSubmit={this.handleSubmit}>
+          <select
+            id="platforms"
+            name="plaforms"
+            value={this.state.value}
+            onChange={this.handlePlatformChange}
+          >
+            <option value="steam">STEAM</option>
+            <option value="kakao">KAKAO</option>
+            <option value="xbox">XBOX</option>
+            <option value="psn">PSN</option>
+          </select>
+          <input
+            type="text"
+            value={this.state.value}
+            onChange={this.handleNameChange}
+          />
+          <input type="submit" value="Search" />
+        </form>
+      </div>
     );
   }
 }
 
-export default UserForm;
+export default withRouter(UserForm);
