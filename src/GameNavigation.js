@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 const GameNavigation = () => {
   return (
     <div>
-      <NavLink to="pubg">Player Unknown's BattleGround</NavLink>
+      <NavLink to="pubg">PLAYERUNKNOWN'S BATTLEGROUND</NavLink>
       {/* <NavLink to="lol">League of Legends</NavLink> */}
     </div>
   );
