@@ -1,12 +1,13 @@
 .user-list {
     position: absolute;
-    right: 5vw;
+    right: 0vw;
 }
 
 .user-list ul {
     list-style: none;
     max-height: 100vh;
     overflow: auto;
+    width: 20vw;
 }
 
 .user-list ul li {
@@ -21,4 +22,23 @@
 canvas {
     position: absolute;
     left: 20vw;
+}
+
+.searched-user {
+    color: red;
+    font-weight: 500;
+}
+
+.other-users {
+    color: green;
+    font-weight: 100;
+}
+
+.survive {
+    position: absolute;
+    font-size: 2.5vw;
+    top: 3vh;
+    left: 1vw;
+    border: 2px solid black;
+    padding: 1vw;
 }

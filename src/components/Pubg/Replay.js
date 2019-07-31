@@ -1,6 +1,14 @@
 import React from "react";
 import * as PIXI from "pixi.js";
 import styles from "./Replay.css";
+import Navigation from "../../Navigation";
+import Erangel from "../../asset/Erangel_Main_Low_Res.png"
+import Erangel_Remastered from "../../asset/Erangel_Remastered_Main_Low_Res.png"
+import Miramar from "../../asset/Miramar_Main_Low_Res.png"
+import Sanhok from "../../asset/Sanhok_Main_Low_Res.png"
+import Vikendi from "../../asset/Vikendi_Main_Low_Res.png"
+import Campreturn_Jackal from "../../asset/Camp_Jackal_Main_Low_Res.png"
+// import CarePackage from '../../asset/CarePackage_Flying.png'
 
 class ReplayPubg extends React.Component {
   state = {
@@ -10,7 +18,8 @@ class ReplayPubg extends React.Component {
     replayData: null,
     app: null,
     players: {},
-    playerStatus: null
+    playerStatus: null,
+    survive: 0
   };
 
   loadProgressHandler = (loader, resource) => {
@@ -33,16 +42,42 @@ class ReplayPubg extends React.Component {
     const y = character.location.y / 816;
 
     let circle = new PIXI.Graphics();
-    circle.beginFill(0xffffff);
-    circle.drawCircle(0, 0, 10);
+    if (character.name === this.props.match.params.name)
+      circle.beginFill(0xff00ff);
+    else circle.beginFill(0xffffff);
+    circle.lineStyle(1, 0x000000);
+    circle.drawCircle(0, 0, 7);
     circle.x = x;
     circle.y = y;
 
+    let nameText;
+    if (character.name === this.props.match.params.name) {
+      nameText = new PIXI.Text(character.name, {
+        fontWeight: "50",
+        fontSize: "30",
+        fill: 0xff0000,
+        align: "center"
+      });
+    } else
+      nameText = new PIXI.Text(character.name, {
+        fontWeight: "50",
+        fontSize: "30",
+        fill: 0xffff00,
+        align: "center"
+      });
+    nameText.position.x = x - 30;
+    nameText.position.y = y - 20;
+
     this.state.app.stage.addChild(circle);
+    this.state.app.stage.addChild(nameText);
 
     let newState = Object.assign({}, this.state);
-    newState.players[id]["pixi"] = circle;
+    newState.players[id]["pixi"] = {
+      circle: circle,
+      name: nameText
+    };
     newState.playerStatus[id] = character;
+    newState.survive++;
     this.setState(newState);
   };
 
@@ -65,8 +100,15 @@ class ReplayPubg extends React.Component {
     const y = character.location.y / 816;
 
     let newState = Object.assign({}, this.state);
-    newState.players[id]["pixi"].x = x;
-    newState.players[id]["pixi"].y = y;
+    newState.players[id]["pixi"].circle.x = x;
+    newState.players[id]["pixi"].circle.y = y;
+    newState.players[id]["pixi"].name.x = x - 30;
+    newState.players[id]["pixi"].name.y = y - 20;
+
+    if (character.health === 0) {
+      newState.players[id]["pixi"].circle.tint = 0xff0000;
+      newState.survive--;
+    }
     newState.playerStatus[id] = character;
     this.setState(newState);
   };
@@ -110,9 +152,28 @@ class ReplayPubg extends React.Component {
       }
 
       timeIdx += 1;
-      console.log(`time: ${timeIdx}`);
+      // console.log(`time: ${timeIdx}`);
     }, 2);
   };
+
+  mapResource = mapName => {
+    switch(mapName) {
+        case "Miramar":
+          return Miramar;
+        case "Vikendi":
+          return Vikendi;
+        case "Erangel":
+          return Erangel;
+        case "Erangel_Remastered":
+          return Erangel_Remastered;
+        case "Campreturn_Jackal":
+          return Campreturn_Jackal;
+        case "Sanhok":
+          return Sanhok;
+        default:
+          return mapName;
+    }
+  }
 
   async componentDidMount() {
     const app = new PIXI.Application({
@@ -142,11 +203,12 @@ class ReplayPubg extends React.Component {
     await this.setState({
       replayData: data
     });
+    console.log(this.state.mapName)
 
     if (PIXI.loader.resources[this.state.mapName] === undefined)
       PIXI.loader.add(
         `${this.state.mapName}`,
-        `http://localhost:3000/asset/${this.state.mapName}_Main_Low_Res.png`
+        this.mapResource(this.state.mapName)
       );
     PIXI.loader.on("progress", this.loadProgressHandler).load(this.setup);
   }
@@ -167,21 +229,38 @@ class ReplayPubg extends React.Component {
       );
 
     return (
-      <div className="user-list">
-        <ul>
-          {Object.entries(this.state.playerStatus).map(user => {
-            return (
-              <li key={user[0]}>
-                <div>name : {user[1].name}</div>
-                <div>Health : {user[1].health.toFixed(2)}</div>
-                <div>
-                  location : {user[1].location.x.toFixed(0)} ,{" "}
-                  {user[1].location.y.toFixed(0)}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+      <div>
+        <Navigation />
+        <div className="survive">SURVIVE | {this.state.survive}</div>
+        <div className="user-list">
+          <ul>
+            {Object.entries(this.state.playerStatus).map(user => {
+              if (user[1].name === this.props.match.params.name)
+                return (
+                  <li key={user[0]}>
+                    <div className="searched-user">name : {user[1].name}</div>
+                    <div>Health : {user[1].health.toFixed(2)}</div>
+                    <div>
+                      location : {user[1].location.x.toFixed(0)} ,{" "}
+                      {user[1].location.y.toFixed(0)}
+                    </div>
+                  </li>
+                );
+              else {
+                return (
+                  <li key={user[0]}>
+                    <div className="other-users">{user[1].name}</div>
+                    <div>Health : {user[1].health.toFixed(2)}</div>
+                    <div>
+                      location : {user[1].location.x.toFixed(0)} ,{" "}
+                      {user[1].location.y.toFixed(0)}
+                    </div>
+                  </li>
+                );
+              }
+            })}
+          </ul>
+        </div>
       </div>
     );
   }
