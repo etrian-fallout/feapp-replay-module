@@ -1,6 +1,6 @@
 import React from "react";
 import * as PIXI from "pixi.js";
-
+import styles from "./Replay.css";
 
 class ReplayPubg extends React.Component {
   state = {
@@ -9,20 +9,25 @@ class ReplayPubg extends React.Component {
     telemetryUrl: "",
     replayData: null,
     app: null,
-    players: {}
+    players: {},
+    playerStatus: null
   };
 
   loadProgressHandler = (loader, resource) => {
     console.log("loading: " + resource.url);
     console.log("progress: " + loader.progress + "%");
-  }
+  };
 
-  login = (character) => {
+  login = character => {
     const id = character.accountId;
-    this.state.players[id] = {};
-  }
 
-  create = (character) => {
+    let newState = Object.assign({}, this.state);
+    newState.players[id] = {};
+    newState.playerStatus = {};
+    this.setState(newState);
+  };
+
+  create = character => {
     const id = character.accountId;
     const x = character.location.x / 816;
     const y = character.location.y / 816;
@@ -34,67 +39,78 @@ class ReplayPubg extends React.Component {
     circle.y = y;
 
     this.state.app.stage.addChild(circle);
-    this.state.players[id]['pixi'] = circle;
-  }
 
-  matchStart = (matchData) => {
+    let newState = Object.assign({}, this.state);
+    newState.players[id]["pixi"] = circle;
+    newState.playerStatus[id] = character;
+    this.setState(newState);
+  };
+
+  matchStart = matchData => {
     const characters = matchData.characters;
 
     characters.forEach(character => {
       this.create(character);
-    })
-  }
+    });
+  };
 
-  position = (character) => {
+  position = character => {
     const id = character.accountId;
 
-    if (this.state.players[id]['pixi'] === undefined) {
+    if (this.state.players[id]["pixi"] === undefined) {
       return;
     }
 
     const x = character.location.x / 816;
     const y = character.location.y / 816;
 
-
-    this.state.players[id]['pixi'].x = x
-    this.state.players[id]['pixi'].y = y
-  }
+    let newState = Object.assign({}, this.state);
+    newState.players[id]["pixi"].x = x;
+    newState.players[id]["pixi"].y = y;
+    newState.playerStatus[id] = character;
+    this.setState(newState);
+  };
 
   setup = () => {
-    let camp = new PIXI.Sprite(PIXI.loader.resources[`${this.state.mapName}`].texture);
+    let camp = new PIXI.Sprite(
+      PIXI.loader.resources[`${this.state.mapName}`].texture
+    );
     this.state.app.stage.addChild(camp);
 
     let timeIdx = 0;
 
-    const startIdx = this.state.replayData.findIndex(x => x['_T'] === 'LogMatchStart');
-    const preArr = this.state.replayData.splice(0, startIdx)
+    const startIdx = this.state.replayData.findIndex(
+      x => x["_T"] === "LogMatchStart"
+    );
+    const preArr = this.state.replayData.splice(0, startIdx);
 
     // replay 시작하기 전에 login 이벤트 처리
-    preArr.filter(x => x['_T'] === 'LogPlayerLogin')
+    preArr
+      .filter(x => x["_T"] === "LogPlayerLogin")
       .forEach(x => this.login(x));
 
-    let playInterval = setInterval(() => {
+    setInterval(() => {
       const x = this.state.replayData[timeIdx];
 
-      switch (x['_T']) {
+      switch (x["_T"]) {
         case "LogPlayerLogin":
           this.login(x);
           break;
 
         case "LogPlayerPosition":
-          this.position(x.character)
-          break
+          this.position(x.character);
+          break;
 
         case "LogMatchStart":
           this.matchStart(x);
-          break
+          break;
 
         default:
           break;
       }
 
-      timeIdx += 1
-      console.log(`time: ${timeIdx}`)
+      timeIdx += 1;
+      console.log(`time: ${timeIdx}`);
     }, 2);
   };
 
@@ -103,8 +119,8 @@ class ReplayPubg extends React.Component {
       width: 1000,
       height: 1000,
       backgroundColor: 0x000000,
-      view: document.getElementById('container')
-    })
+      view: document.getElementById("container")
+    });
 
     document.body.appendChild(app.view);
 
@@ -125,26 +141,48 @@ class ReplayPubg extends React.Component {
 
     await this.setState({
       replayData: data
-    })
-    
-    
-    if(PIXI.loader.resources[this.state.mapName] === undefined)
-      PIXI.loader.add(`${this.state.mapName}`, `http://localhost:3000/asset/${this.state.mapName}_Main_Low_Res.png`)
-    PIXI.loader
-      .on('progress', this.loadProgressHandler)
-      .load(this.setup);
+    });
+
+    if (PIXI.loader.resources[this.state.mapName] === undefined)
+      PIXI.loader.add(
+        `${this.state.mapName}`,
+        `http://localhost:3000/asset/${this.state.mapName}_Main_Low_Res.png`
+      );
+    PIXI.loader.on("progress", this.loadProgressHandler).load(this.setup);
   }
 
   componentWillUnmount() {
     for (let i = this.state.app.stage.children.length - 1; i >= 0; i--) {
-        this.state.app.stage.removeChild(this.state.app.stage.children[i]);
-    };
-    document.body.removeChild(this.state.app.view)
+      this.state.app.stage.removeChild(this.state.app.stage.children[i]);
+    }
+    document.body.removeChild(this.state.app.view);
   }
 
   render() {
+    if (this.state.playerStatus === null)
+      return (
+        <div className="user-list">
+          <p>Loading...</p>
+        </div>
+      );
+
     return (
-      <div>Replay</div>
+      <div className="user-list">
+        <ul>
+          {Object.entries(this.state.playerStatus).map(user => {
+            return (
+              <li key={user[0]}>
+                <div>name : {user[1].name}</div>
+                <div>Health : {user[1].health.toFixed(2)}</div>
+                <div>
+                  location : {user[1].location.x.toFixed(0)} ,{" "}
+                  {user[1].location.y.toFixed(0)}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     );
   }
 }
