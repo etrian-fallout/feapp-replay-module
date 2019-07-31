@@ -238,7 +238,7 @@ class ReplayPubg extends React.Component {
               if (user[1].name === this.props.match.params.name)
                 return (
                   <li key={user[0]}>
-                    <div className="searched-user">name : {user[1].name}</div>
+                    <div className="searched-user">{user[1].name}</div>
                     <div>Health : {user[1].health.toFixed(2)}</div>
                     <div>
                       location : {user[1].location.x.toFixed(0)} ,{" "}
