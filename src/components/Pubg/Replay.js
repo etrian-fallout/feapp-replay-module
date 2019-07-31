@@ -21,7 +21,8 @@ class ReplayPubg extends React.Component {
     playerStatus: null,
     survive: 0,
     carePackages: {},
-    carePackageStatus: {}
+    carePackageStatus: {},
+    zones: { 'redZone': null, 'poisonGasWarning': null, 'safetyZone': null }
   };
 
   loadProgressHandler = (loader, resource) => {
@@ -162,6 +163,55 @@ class ReplayPubg extends React.Component {
     newState.carePackages[isGame].y = y;
   };
 
+  drawGameState = (gameState) => {
+    const poisonGasWarningPosition = gameState.poisonGasWarningPosition;
+    const redZonePosition = gameState.redZonePosition;
+    const safetyZonePosition = gameState.safetyZonePosition;
+
+    if (this.state.zones['redZone'] != null) {
+      this.state.app.stage.removeChild(this.state.zones['redZone'])
+    }
+
+    const x1 = redZonePosition.x / 816;
+    const y1 = redZonePosition.y / 816;
+    const r1 = gameState.redZoneRadius / 816;
+
+    const zone1 = new PIXI.Graphics();
+    zone1.beginFill(0xff0000, 0.3);
+    zone1.drawCircle(x1, y1, r1);
+    this.state.app.stage.addChild(zone1);
+    this.state.zones['redZone'] = zone1;
+
+    if (this.state.zones['poisonGasWarning'] != null) {
+      this.state.app.stage.removeChild(this.state.zones['poisonGasWarning'])
+    }
+
+    const x2 = poisonGasWarningPosition.x / 816;
+    const y2 = poisonGasWarningPosition.y / 816;
+    const r2 = gameState.poisonGasWarningRadius / 816
+
+    const zone2 = new PIXI.Graphics();
+    zone2.lineStyle(3, 0x0000ff, 1)
+    zone2.drawCircle(x2, y2, r2);
+    this.state.app.stage.addChild(zone2);
+    this.state.zones['poisonGasWarning'] = zone2;
+
+    if (this.state.zones['safetyZone'] != null) {
+      this.state.app.stage.removeChild(this.state.zones['safetyZone'])
+    }
+
+    const x3 = safetyZonePosition.x / 816;
+    const y3 = safetyZonePosition.y / 816;
+    const r3 = gameState.redZoneRadius / 816;
+
+    const zone3 = new PIXI.Graphics();
+    zone3.lineStyle(3, 0xffffff, 1)
+    zone3.drawCircle(x3, y3, r3);
+    this.state.app.stage.addChild(zone3);
+    this.state.zones['safetyZone'] = zone3;
+
+  }
+
   setup = () => {
     let camp = new PIXI.Sprite(
       PIXI.loader.resources[`${this.state.mapName}`].texture
@@ -195,11 +245,17 @@ class ReplayPubg extends React.Component {
         case "LogMatchStart":
           this.matchStart(x);
           break;
+          
         case "LogCarePackageLand":
         case "LogCarePackageSpawn":
           console.log(x);
           this.manageCarePackage(x);
           break;
+          
+        case "LogGameStatePeriodic":
+          this.drawGameState(x.gameState);
+          break
+          
         default:
           break;
       }
