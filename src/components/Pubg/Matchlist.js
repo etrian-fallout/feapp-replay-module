@@ -1,13 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Navigation from '../../Navigation'
+import Navigation from "../../Navigation";
 
 const request1 = "http://localhost:8080/pubg/players/";
 const request2 = "http://localhost:8080/pubg/matches/";
 
 class Matchlist extends React.Component {
   state = {
-    matchIdlist: null
+    matchIdlist: null,
+    error: null
   };
 
   replaceMapName = name => {
@@ -39,6 +40,13 @@ class Matchlist extends React.Component {
       .then(res => res.json())
       .then(data => data);
 
+    if (matchIds.status !== undefined) {
+      this.setState({
+        error: matchIds.status
+      });
+      return;
+    }
+    
     const funcArr = matchIds.map(async x => {
       const url =
         request2 + x["id"] + "?platform=" + this.props.match.params.platform;
@@ -56,7 +64,10 @@ class Matchlist extends React.Component {
   }
 
   render() {
-    if (this.state.matchIdlist === null) return <p>Loading...</p>;
+    if (this.state.matchIdlist === null && this.state.error === null)
+      return <p>Loading...</p>;
+    else if (this.state.error !== null)
+      return <div>error : {this.state.error}</div>;
     return (
       <div>
         <Navigation />
@@ -65,13 +76,24 @@ class Matchlist extends React.Component {
             const mapName = this.replaceMapName(
               this.state.matchInfoList[idx]["data"]["attributes"]["mapName"]
             );
-            const time = this.state.matchInfoList[idx]["data"]["attributes"]["createdAt"];
-            const gameMode = this.state.matchInfoList[idx]["data"]["attributes"]["gameMode"];
-            const userInfo = this.state.matchInfoList[idx]["included"].filter(data => data["type"] === "participant" && data["attributes"]["stats"]["name"] === this.props.match.params.name)[0];
+            const time = this.state.matchInfoList[idx]["data"]["attributes"][
+              "createdAt"
+            ];
+            const gameMode = this.state.matchInfoList[idx]["data"][
+              "attributes"
+            ]["gameMode"];
+            const userInfo = this.state.matchInfoList[idx]["included"].filter(
+              data =>
+                data["type"] === "participant" &&
+                data["attributes"]["stats"]["name"] ===
+                  this.props.match.params.name
+            )[0];
             const kills = userInfo["attributes"]["stats"]["kills"];
             const rank = userInfo["attributes"]["stats"]["winPlace"];
-            const asset = this.state.matchInfoList[idx]["included"].filter(data => data["type"] === "asset")[0];
-            
+            const asset = this.state.matchInfoList[idx]["included"].filter(
+              data => data["type"] === "asset"
+            )[0];
+
             return (
               <li key={item["id"]}>
                 <div>
