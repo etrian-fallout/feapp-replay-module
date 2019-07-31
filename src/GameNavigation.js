@@ -5,7 +5,7 @@ const GameNavigation = () => {
   return (
     <div>
       <NavLink to="pubg">Player Unknown's BattleGround</NavLink>
-      <NavLink to="lol">League of Legends</NavLink>
+      {/* <NavLink to="lol">League of Legends</NavLink> */}
     </div>
   );
 };
