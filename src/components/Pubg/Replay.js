@@ -8,7 +8,7 @@ import Miramar from "../../asset/Miramar_Main_Low_Res.png"
 import Sanhok from "../../asset/Sanhok_Main_Low_Res.png"
 import Vikendi from "../../asset/Vikendi_Main_Low_Res.png"
 import Campreturn_Jackal from "../../asset/Camp_Jackal_Main_Low_Res.png"
-// import CarePackage from '../../asset/CarePackage_Flying.png'
+import CarePackage from '../../asset/CarePackage_Flying.png'
 
 class ReplayPubg extends React.Component {
   state = {
@@ -19,7 +19,8 @@ class ReplayPubg extends React.Component {
     app: null,
     players: {},
     playerStatus: null,
-    survive: 0
+    survive: 0,
+    carePackages: {}
   };
 
   loadProgressHandler = (loader, resource) => {
@@ -113,6 +114,31 @@ class ReplayPubg extends React.Component {
     this.setState(newState);
   };
 
+  manageCarePackage = (carePackage) => {
+    const isGame = carePackage.common.isGame;
+    const x = carePackage.itemPackage.location.x / 816;
+    const y = carePackage.itemPackage.location.y / 816;
+
+    if(this.state.carePackages[isGame] === undefined) {
+      let packageImage = new PIXI.Sprite.from(CarePackage);
+      packageImage.scale.x = 0.3;
+      packageImage.scale.y = 0.3;
+      packageImage.x = x;
+      packageImage.y = y;
+
+      this.state.app.stage.addChild(packageImage);
+
+      let newState = Object.assign({}, this.state);
+      newState.carePackages[isGame] = packageImage;
+      this.setState(newState);
+      return;
+    }
+
+    let newState = Object.assign({}, this.state);
+    newState.carePackages[isGame].x = x;
+    newState.carePackages[isGame].y = y;
+  }
+
   setup = () => {
     let camp = new PIXI.Sprite(
       PIXI.loader.resources[`${this.state.mapName}`].texture
@@ -146,7 +172,11 @@ class ReplayPubg extends React.Component {
         case "LogMatchStart":
           this.matchStart(x);
           break;
-
+        case "LogCarePackageLand":
+        case "LogCarePackageSpawn":
+            console.log(x)
+          this.manageCarePackage(x);
+          break;
         default:
           break;
       }
