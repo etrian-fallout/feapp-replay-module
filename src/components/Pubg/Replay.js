@@ -9,8 +9,7 @@ class ReplayPubg extends React.Component {
     telemetryUrl: "",
     replayData: null,
     app: null,
-    players: {},
-    Loader: null
+    players: {}
   };
 
   loadProgressHandler = (loader, resource) => {
