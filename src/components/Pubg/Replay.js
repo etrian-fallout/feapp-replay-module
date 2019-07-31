@@ -128,8 +128,9 @@ class ReplayPubg extends React.Component {
       replayData: data
     })
     
-    PIXI.loader
-      .add(`${this.state.mapName}`, `http://localhost:3000/asset/${this.state.mapName}_Main_Low_Res.png`)
+    
+    if(PIXI.loader.resources[this.state.mapName] === undefined)
+      PIXI.loader.add(`${this.state.mapName}`, `http://localhost:3000/asset/${this.state.mapName}_Main_Low_Res.png`)
     PIXI.loader
       .on('progress', this.loadProgressHandler)
       .load(this.setup);
