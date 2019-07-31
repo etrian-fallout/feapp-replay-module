@@ -6,7 +6,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>PUBG <del>/ LOL</del> Minimap Replay</h1>
+        <h1>PUBG Map Replay</h1>
       </header>
       <Navigation />
       <GameNavigation />
