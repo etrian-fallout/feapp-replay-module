@@ -2,13 +2,13 @@ import React from "react";
 import * as PIXI from "pixi.js";
 import styles from "./Replay.css";
 import Navigation from "../../Navigation";
-import Erangel from "../../asset/Erangel_Main_Low_Res.png"
-import Erangel_Remastered from "../../asset/Erangel_Remastered_Main_Low_Res.png"
-import Miramar from "../../asset/Miramar_Main_Low_Res.png"
-import Sanhok from "../../asset/Sanhok_Main_Low_Res.png"
-import Vikendi from "../../asset/Vikendi_Main_Low_Res.png"
-import Campreturn_Jackal from "../../asset/Camp_Jackal_Main_Low_Res.png"
-// import CarePackage from '../../asset/CarePackage_Flying.png'
+import Erangel from "../../asset/Erangel_Main_Low_Res.png";
+import Erangel_Remastered from "../../asset/Erangel_Remastered_Main_Low_Res.png";
+import Miramar from "../../asset/Miramar_Main_Low_Res.png";
+import Sanhok from "../../asset/Sanhok_Main_Low_Res.png";
+import Vikendi from "../../asset/Vikendi_Main_Low_Res.png";
+import Campreturn_Jackal from "../../asset/Camp_Jackal_Main_Low_Res.png";
+import CarePackage from "../../asset/CarePackage_Flying.png";
 
 class ReplayPubg extends React.Component {
   state = {
@@ -19,7 +19,9 @@ class ReplayPubg extends React.Component {
     app: null,
     players: {},
     playerStatus: null,
-    survive: 0
+    survive: 0,
+    carePackages: {},
+    carePackageStatus: {}
   };
 
   loadProgressHandler = (loader, resource) => {
@@ -113,6 +115,32 @@ class ReplayPubg extends React.Component {
     this.setState(newState);
   };
 
+  manageCarePackage = carePackage => {
+    const isGame = carePackage.common.isGame;
+    const x = carePackage.itemPackage.location.x / 816;
+    const y = carePackage.itemPackage.location.y / 816;
+
+    if (this.state.carePackages[isGame] === undefined) {
+      let packageImage = new PIXI.Sprite.from(CarePackage);
+      packageImage.scale.x = 0.3;
+      packageImage.scale.y = 0.3;
+      packageImage.x = x;
+      packageImage.y = y;
+
+      this.state.app.stage.addChild(packageImage);
+
+      let newState = Object.assign({}, this.state);
+      newState.carePackages[isGame] = packageImage;
+      newState.carePackageStatus[isGame] = carePackage;
+      this.setState(newState);
+      return;
+    }
+
+    let newState = Object.assign({}, this.state);
+    newState.carePackages[isGame].x = x;
+    newState.carePackages[isGame].y = y;
+  };
+
   setup = () => {
     let camp = new PIXI.Sprite(
       PIXI.loader.resources[`${this.state.mapName}`].texture
@@ -146,7 +174,11 @@ class ReplayPubg extends React.Component {
         case "LogMatchStart":
           this.matchStart(x);
           break;
-
+        case "LogCarePackageLand":
+        case "LogCarePackageSpawn":
+          console.log(x);
+          this.manageCarePackage(x);
+          break;
         default:
           break;
       }
@@ -157,23 +189,23 @@ class ReplayPubg extends React.Component {
   };
 
   mapResource = mapName => {
-    switch(mapName) {
-        case "Miramar":
-          return Miramar;
-        case "Vikendi":
-          return Vikendi;
-        case "Erangel":
-          return Erangel;
-        case "Erangel_Remastered":
-          return Erangel_Remastered;
-        case "Campreturn_Jackal":
-          return Campreturn_Jackal;
-        case "Sanhok":
-          return Sanhok;
-        default:
-          return mapName;
+    switch (mapName) {
+      case "Miramar":
+        return Miramar;
+      case "Vikendi":
+        return Vikendi;
+      case "Erangel":
+        return Erangel;
+      case "Erangel_Remastered":
+        return Erangel_Remastered;
+      case "Campreturn_Jackal":
+        return Campreturn_Jackal;
+      case "Sanhok":
+        return Sanhok;
+      default:
+        return mapName;
     }
-  }
+  };
 
   async componentDidMount() {
     const app = new PIXI.Application({
@@ -203,7 +235,7 @@ class ReplayPubg extends React.Component {
     await this.setState({
       replayData: data
     });
-    console.log(this.state.mapName)
+    console.log(this.state.mapName);
 
     if (PIXI.loader.resources[this.state.mapName] === undefined)
       PIXI.loader.add(
@@ -232,13 +264,32 @@ class ReplayPubg extends React.Component {
       <div>
         <Navigation />
         <div className="survive">SURVIVE | {this.state.survive}</div>
+        <div className="carepackage">
+          <ul>
+            {Object.entries(this.state.carePackageStatus).map(items => {
+              return (
+                <li key={items[0]}>
+                  <b>CarePackage</b>
+                  {items[1].itemPackage.items.map(item => {
+                    return (
+                      <div>
+                        {item["category"]} : {item["itemId"]}{" , "}
+                        {item["stackCount"]} count
+                      </div>
+                    );
+                  })}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
         <div className="user-list">
           <ul>
             {Object.entries(this.state.playerStatus).map(user => {
               if (user[1].name === this.props.match.params.name)
                 return (
                   <li key={user[0]}>
-                    <div className="searched-user">name : {user[1].name}</div>
+                    <div className="searched-user">{user[1].name}</div>
                     <div>Health : {user[1].health.toFixed(2)}</div>
                     <div>
                       location : {user[1].location.x.toFixed(0)} ,{" "}

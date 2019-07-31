@@ -42,3 +42,22 @@ canvas {
     border: 2px solid black;
     padding: 1vw;
 }
+
+.carepackage {
+    position: absolute;
+    top: 12vh;
+    font-size: 0.8vw;
+    left: -2.35vw;
+}
+
+.carepackage ul {
+    list-style: none;
+    max-height: 100vh;
+    overflow: auto;
+    width: 20vw;
+}
+
+.carepackage ul li {
+    border: 1px solid black;
+    margin: 1px;
+}
