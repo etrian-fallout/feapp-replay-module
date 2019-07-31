@@ -1,6 +1,7 @@
 import React from "react";
 import * as PIXI from "pixi.js";
 
+
 class ReplayPubg extends React.Component {
   state = {
     matchId: "",
@@ -8,7 +9,8 @@ class ReplayPubg extends React.Component {
     telemetryUrl: "",
     replayData: null,
     app: null,
-    players: {}
+    players: {},
+    Loader: null
   };
 
   loadProgressHandler = (loader, resource) => {
@@ -47,12 +49,13 @@ class ReplayPubg extends React.Component {
   position = (character) => {
     const id = character.accountId;
 
-    if (this.state.players[id]['pixi'] == undefined) {
+    if (this.state.players[id]['pixi'] === undefined) {
       return;
     }
 
     const x = character.location.x / 816;
     const y = character.location.y / 816;
+
 
     this.state.players[id]['pixi'].x = x
     this.state.players[id]['pixi'].y = y
@@ -64,11 +67,11 @@ class ReplayPubg extends React.Component {
 
     let timeIdx = 0;
 
-    const startIdx = this.state.replayData.findIndex(x => x['_T'] == 'LogMatchStart');
+    const startIdx = this.state.replayData.findIndex(x => x['_T'] === 'LogMatchStart');
     const preArr = this.state.replayData.splice(0, startIdx)
 
     // replay 시작하기 전에 login 이벤트 처리
-    preArr.filter(x => x['_T'] == 'LogPlayerLogin')
+    preArr.filter(x => x['_T'] === 'LogPlayerLogin')
       .forEach(x => this.login(x));
 
     let playInterval = setInterval(() => {
@@ -124,11 +127,19 @@ class ReplayPubg extends React.Component {
     await this.setState({
       replayData: data
     })
-
+    
     PIXI.loader
       .add(`${this.state.mapName}`, `http://localhost:3000/asset/${this.state.mapName}_Main_Low_Res.png`)
+    PIXI.loader
       .on('progress', this.loadProgressHandler)
       .load(this.setup);
+  }
+
+  componentWillUnmount() {
+    for (let i = this.state.app.stage.children.length - 1; i >= 0; i--) {
+        this.state.app.stage.removeChild(this.state.app.stage.children[i]);
+    };
+    document.body.removeChild(this.state.app.view)
   }
 
   render() {
