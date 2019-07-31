@@ -40,8 +40,9 @@ class ReplayPubg extends React.Component {
 
   create = character => {
     const id = character.accountId;
-    const x = character.location.x / 816;
-    const y = character.location.y / 816;
+    const calculated = this.calculatePosition(character.location.x, character.location.y)
+    const x = calculated[0];
+    const y = calculated[1];
 
     let circle = new PIXI.Graphics();
     if (character.name === this.props.match.params.name)
@@ -91,15 +92,34 @@ class ReplayPubg extends React.Component {
     });
   };
 
+  calculatePosition = (x, y) => {
+    switch(this.state.mapName) {
+      case "Miramar":
+        return [x / 816, y / 816];
+      case "Vikendi":
+        return [x / 612, y / 612];
+      case "Erangel":
+        return [x / 816, y / 816];
+      case "Erangel_Remastered":
+        return [x / 816, y / 816];
+      case "Campreturn_Jackal":
+        return [x / 816, y / 816];
+      case "Sanhok":
+        return [x / 408, y / 408];
+      default:
+        return [x, y];
+    }
+  }
+
   position = character => {
     const id = character.accountId;
 
     if (this.state.players[id]["pixi"] === undefined) {
       return;
     }
-
-    const x = character.location.x / 816;
-    const y = character.location.y / 816;
+    const calculated = this.calculatePosition(character.location.x, character.location.y)
+    const x = calculated[0];
+    const y = calculated[1];
 
     let newState = Object.assign({}, this.state);
     newState.players[id]["pixi"].circle.x = x;
@@ -117,8 +137,9 @@ class ReplayPubg extends React.Component {
 
   manageCarePackage = carePackage => {
     const isGame = carePackage.common.isGame;
-    const x = carePackage.itemPackage.location.x / 816;
-    const y = carePackage.itemPackage.location.y / 816;
+    const calculated = this.calculatePosition(carePackage.itemPackage.location.x, carePackage.itemPackage.location.y)
+    const x = calculated[0];
+    const y = calculated[1];
 
     if (this.state.carePackages[isGame] === undefined) {
       let packageImage = new PIXI.Sprite.from(CarePackage);
@@ -183,7 +204,7 @@ class ReplayPubg extends React.Component {
           break;
       }
 
-      timeIdx += 1;
+      if(timeIdx < this.state.replayData.length - 1)timeIdx += 1;
       // console.log(`time: ${timeIdx}`);
     }, 2);
   };
