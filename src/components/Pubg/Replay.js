@@ -172,10 +172,11 @@ class ReplayPubg extends React.Component {
       this.state.app.stage.removeChild(this.state.zones['redZone'])
     }
 
-    const x1 = redZonePosition.x / 816;
-    const y1 = redZonePosition.y / 816;
-    const r1 = gameState.redZoneRadius / 816;
-
+    const position1 = this.calculatePosition(redZonePosition.x, redZonePosition.y)
+    const x1 = position1[0]
+    const y1 = position1[1]
+    const r1 = this.calculatePosition(gameState.redZoneRadius, 0)[0]
+    
     const zone1 = new PIXI.Graphics();
     zone1.beginFill(0xff0000, 0.3);
     zone1.drawCircle(x1, y1, r1);
@@ -186,12 +187,13 @@ class ReplayPubg extends React.Component {
       this.state.app.stage.removeChild(this.state.zones['poisonGasWarning'])
     }
 
-    const x2 = poisonGasWarningPosition.x / 816;
-    const y2 = poisonGasWarningPosition.y / 816;
-    const r2 = gameState.poisonGasWarningRadius / 816
+    const position2 = this.calculatePosition(poisonGasWarningPosition.x, poisonGasWarningPosition.y)
+    const x2 = position2[0];
+    const y2 = position2[1];
+    const r2 = this.calculatePosition(gameState.poisonGasWarningRadius, 0)[0]
 
     const zone2 = new PIXI.Graphics();
-    zone2.lineStyle(3, 0x0000ff, 1)
+    zone2.lineStyle(3, 0xffffff, 1)
     zone2.drawCircle(x2, y2, r2);
     this.state.app.stage.addChild(zone2);
     this.state.zones['poisonGasWarning'] = zone2;
@@ -200,12 +202,13 @@ class ReplayPubg extends React.Component {
       this.state.app.stage.removeChild(this.state.zones['safetyZone'])
     }
 
-    const x3 = safetyZonePosition.x / 816;
-    const y3 = safetyZonePosition.y / 816;
-    const r3 = gameState.redZoneRadius / 816;
+    const position3 = this.calculatePosition(safetyZonePosition.x, safetyZonePosition.y)
+    const x3 = position3[0];
+    const y3 = position3[1];
+    const r3 = this.calculatePosition(gameState.safetyZoneRadius, 0)[0]
 
     const zone3 = new PIXI.Graphics();
-    zone3.lineStyle(3, 0xffffff, 1)
+    zone3.lineStyle(3, 0x0000ff, 1)
     zone3.drawCircle(x3, y3, r3);
     this.state.app.stage.addChild(zone3);
     this.state.zones['safetyZone'] = zone3;
