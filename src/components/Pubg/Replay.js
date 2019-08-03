@@ -94,7 +94,7 @@ class ReplayPubg extends React.Component {
   };
 
   calculatePosition = (x, y) => {
-    switch(this.state.mapName) {
+    switch (this.state.mapName) {
       case "Miramar":
         return [x / 816, y / 816];
       case "Vikendi":
@@ -176,7 +176,7 @@ class ReplayPubg extends React.Component {
     const x1 = position1[0]
     const y1 = position1[1]
     const r1 = this.calculatePosition(gameState.redZoneRadius, 0)[0]
-    
+
     const zone1 = new PIXI.Graphics();
     zone1.beginFill(0xff0000, 0.3);
     zone1.drawCircle(x1, y1, r1);
@@ -231,16 +231,12 @@ class ReplayPubg extends React.Component {
     // replay 시작하기 전에 login 이벤트 처리
     preArr
       .filter(x => x["_T"] === "LogPlayerLogin")
-      .forEach(x => this.login(x));
+      .forEach(this.login);
 
     setInterval(() => {
       const x = this.state.replayData[timeIdx];
 
       switch (x["_T"]) {
-        case "LogPlayerLogin":
-          this.login(x);
-          break;
-
         case "LogPlayerPosition":
           this.position(x.character);
           break;
@@ -248,24 +244,23 @@ class ReplayPubg extends React.Component {
         case "LogMatchStart":
           this.matchStart(x);
           break;
-          
+
         case "LogCarePackageLand":
         case "LogCarePackageSpawn":
-          console.log(x);
           this.manageCarePackage(x);
           break;
-          
+
         case "LogGameStatePeriodic":
           this.drawGameState(x.gameState);
           break
-          
+
         default:
           break;
       }
 
-      if(timeIdx < this.state.replayData.length - 1)timeIdx += 1;
+      if (timeIdx < this.state.replayData.length - 1) timeIdx += 1;
       // console.log(`time: ${timeIdx}`);
-    }, 2);
+    }, 1);
   };
 
   mapResource = mapName => {
