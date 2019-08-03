@@ -2,8 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Navigation from "../../Navigation";
 
-const request1 = "http://localhost:8080/pubg/players/";
-const request2 = "http://localhost:8080/pubg/matches/";
+const request1 = "https://bereplay.herokuapp.com/pubg/players/";
+const request2 = "https://bereplay.herokuapp.com/pubg/matches/";
 
 class Matchlist extends React.Component {
   state = {
