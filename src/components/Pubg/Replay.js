@@ -93,22 +93,22 @@ class ReplayPubg extends React.Component {
     });
   };
 
-  calculatePosition = (x, y) => {
-    switch(this.state.mapName) {
+  calculatePosition = (x) => {
+    switch (this.state.mapName) {
       case "Miramar":
-        return [x / 816, y / 816];
+        return x / 816;
       case "Vikendi":
-        return [x / 612, y / 612];
+        return x / 612;
       case "Erangel":
-        return [x / 816, y / 816];
+        return x / 816;
       case "Erangel_Remastered":
-        return [x / 816, y / 816];
+        return x / 816;
       case "Campreturn_Jackal":
-        return [x / 816, y / 816];
+        return x / 816;
       case "Sanhok":
-        return [x / 408, y / 408];
+        return x / 408;
       default:
-        return [x, y];
+        return x;
     }
   }
 
@@ -118,9 +118,9 @@ class ReplayPubg extends React.Component {
     if (this.state.players[id]["pixi"] === undefined) {
       return;
     }
-    const calculated = this.calculatePosition(character.location.x, character.location.y)
-    const x = calculated[0];
-    const y = calculated[1];
+
+    const x = this.calculatePosition(character.location.x)
+    const y = this.calculatePosition(character.location.y)
 
     let newState = Object.assign({}, this.state);
     newState.players[id]["pixi"].circle.x = x;
@@ -138,9 +138,8 @@ class ReplayPubg extends React.Component {
 
   manageCarePackage = carePackage => {
     const isGame = carePackage.common.isGame;
-    const calculated = this.calculatePosition(carePackage.itemPackage.location.x, carePackage.itemPackage.location.y)
-    const x = calculated[0];
-    const y = calculated[1];
+    const x = this.calculatePosition(carePackage.itemPackage.location.x)
+    const y = this.calculatePosition(carePackage.itemPackage.location.y)
 
     if (this.state.carePackages[isGame] === undefined) {
       let packageImage = new PIXI.Sprite.from(CarePackage);
@@ -168,51 +167,72 @@ class ReplayPubg extends React.Component {
     const redZonePosition = gameState.redZonePosition;
     const safetyZonePosition = gameState.safetyZonePosition;
 
+    const x1 = this.calculatePosition(redZonePosition.x)
+    const y1 = this.calculatePosition(redZonePosition.y)
+    const r1 = this.calculatePosition(gameState.redZoneRadius)
+
+    const x2 = this.calculatePosition(poisonGasWarningPosition.x)
+    const y2 = this.calculatePosition(poisonGasWarningPosition.y)
+    const r2 = this.calculatePosition(gameState.poisonGasWarningRadius)
+
+    const x3 = this.calculatePosition(safetyZonePosition.x)
+    const y3 = this.calculatePosition(safetyZonePosition.y)
+    const r3 = this.calculatePosition(gameState.safetyZoneRadius)
+
     if (this.state.zones['redZone'] != null) {
-      this.state.app.stage.removeChild(this.state.zones['redZone'])
+      this.state.zones['redZone'].clear()
+      this.state.zones['redZone'].beginFill(0xff0000, 0.3);
+      this.state.zones['redZone'].drawCircle(x1, y1, r1);
     }
 
-    const position1 = this.calculatePosition(redZonePosition.x, redZonePosition.y)
-    const x1 = position1[0]
-    const y1 = position1[1]
-    const r1 = this.calculatePosition(gameState.redZoneRadius, 0)[0]
-    
+    if (this.state.zones['poisonGasWarning'] != null) {
+      this.state.zones['poisonGasWarning'].clear()
+      this.state.zones['poisonGasWarning'].lineStyle(3, 0xffffff, 1)
+      this.state.zones['poisonGasWarning'].drawCircle(x2, y2, r2);
+    }
+
+    if (this.state.zones['safetyZone'] != null) {
+      this.safetyZoneTicker(x3, y3, r3)
+    }
+  }
+
+  initPixiGraphics = () => {
     const zone1 = new PIXI.Graphics();
     zone1.beginFill(0xff0000, 0.3);
-    zone1.drawCircle(x1, y1, r1);
+    zone1.drawCircle(0, 0, 0);
     this.state.app.stage.addChild(zone1);
     this.state.zones['redZone'] = zone1;
 
-    if (this.state.zones['poisonGasWarning'] != null) {
-      this.state.app.stage.removeChild(this.state.zones['poisonGasWarning'])
-    }
-
-    const position2 = this.calculatePosition(poisonGasWarningPosition.x, poisonGasWarningPosition.y)
-    const x2 = position2[0];
-    const y2 = position2[1];
-    const r2 = this.calculatePosition(gameState.poisonGasWarningRadius, 0)[0]
-
     const zone2 = new PIXI.Graphics();
     zone2.lineStyle(3, 0xffffff, 1)
-    zone2.drawCircle(x2, y2, r2);
+    zone2.drawCircle(0, 0, 0);
     this.state.app.stage.addChild(zone2);
     this.state.zones['poisonGasWarning'] = zone2;
 
-    if (this.state.zones['safetyZone'] != null) {
-      this.state.app.stage.removeChild(this.state.zones['safetyZone'])
-    }
-
-    const position3 = this.calculatePosition(safetyZonePosition.x, safetyZonePosition.y)
-    const x3 = position3[0];
-    const y3 = position3[1];
-    const r3 = this.calculatePosition(gameState.safetyZoneRadius, 0)[0]
-
     const zone3 = new PIXI.Graphics();
     zone3.lineStyle(3, 0x0000ff, 1)
-    zone3.drawCircle(x3, y3, r3);
+    zone3.drawCircle(0, 0, 0);
     this.state.app.stage.addChild(zone3);
     this.state.zones['safetyZone'] = zone3;
+  }
 
+  safetyZoneTicker = (x, y, r) => {
+    let currR = this.state.zones['safetyZone'].r || r;
+
+    const tickFunc = () => {
+      currR--;
+
+      this.state.zones['safetyZone'].clear()
+      this.state.zones['safetyZone'].lineStyle(3, 0x0000ff, 1)
+      this.state.zones['safetyZone'].drawCircle(x, y, currR);
+
+      if (currR <= r) {
+        this.state.zones['safetyZone'].r = currR
+        this.state.app.ticker.remove(tickFunc)
+      }
+    }
+
+    this.state.app.ticker.add(tickFunc)
   }
 
   setup = () => {
@@ -220,6 +240,7 @@ class ReplayPubg extends React.Component {
       PIXI.loader.resources[`${this.state.mapName}`].texture
     );
     this.state.app.stage.addChild(camp);
+    this.initPixiGraphics()
 
     let timeIdx = 0;
 
@@ -231,16 +252,12 @@ class ReplayPubg extends React.Component {
     // replay 시작하기 전에 login 이벤트 처리
     preArr
       .filter(x => x["_T"] === "LogPlayerLogin")
-      .forEach(x => this.login(x));
+      .forEach(this.login);
 
     setInterval(() => {
       const x = this.state.replayData[timeIdx];
 
       switch (x["_T"]) {
-        case "LogPlayerLogin":
-          this.login(x);
-          break;
-
         case "LogPlayerPosition":
           this.position(x.character);
           break;
@@ -248,24 +265,23 @@ class ReplayPubg extends React.Component {
         case "LogMatchStart":
           this.matchStart(x);
           break;
-          
+
         case "LogCarePackageLand":
         case "LogCarePackageSpawn":
-          console.log(x);
           this.manageCarePackage(x);
           break;
-          
+
         case "LogGameStatePeriodic":
           this.drawGameState(x.gameState);
           break
-          
+
         default:
           break;
       }
 
-      if(timeIdx < this.state.replayData.length - 1)timeIdx += 1;
+      if (timeIdx < this.state.replayData.length - 1) timeIdx += 1;
       // console.log(`time: ${timeIdx}`);
-    }, 2);
+    }, 10);
   };
 
   mapResource = mapName => {
@@ -315,7 +331,6 @@ class ReplayPubg extends React.Component {
     await this.setState({
       replayData: data
     });
-    console.log(this.state.mapName);
 
     if (PIXI.loader.resources[this.state.mapName] === undefined)
       PIXI.loader.add(
@@ -333,13 +348,13 @@ class ReplayPubg extends React.Component {
   }
 
   render() {
-    if (this.state.playerStatus === null)
+    if (this.state.playerStatus === null) {
       return (
         <div className="user-list">
           <p>Loading...</p>
         </div>
       );
-
+    }
     return (
       <div>
         <Navigation />
@@ -355,7 +370,7 @@ class ReplayPubg extends React.Component {
                       <div>
                         {item["category"]} : {item["itemId"]}{" , "}
                         {item["stackCount"]} count
-                      </div>
+                        </div>
                     );
                   })}
                 </li>
@@ -372,8 +387,8 @@ class ReplayPubg extends React.Component {
                     <div className="searched-user">{user[1].name}</div>
                     <div>Health : {user[1].health.toFixed(2)}</div>
                     <div>
-                      location : {user[1].location.x.toFixed(0)} ,{" "}
-                      {user[1].location.y.toFixed(0)}
+                      location : {this.calculatePosition(user[1].location.x).toFixed(0)} ,{" "}
+                      {this.calculatePosition(user[1].location.y).toFixed(0)}
                     </div>
                   </li>
                 );
@@ -383,8 +398,8 @@ class ReplayPubg extends React.Component {
                     <div className="other-users">{user[1].name}</div>
                     <div>Health : {user[1].health.toFixed(2)}</div>
                     <div>
-                      location : {user[1].location.x.toFixed(0)} ,{" "}
-                      {user[1].location.y.toFixed(0)}
+                      location : {this.calculatePosition(user[1].location.x).toFixed(0)} ,{" "}
+                      {this.calculatePosition(user[1].location.y).toFixed(0)}
                     </div>
                   </li>
                 );
