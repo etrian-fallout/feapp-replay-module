@@ -167,48 +167,53 @@ class ReplayPubg extends React.Component {
     const redZonePosition = gameState.redZonePosition;
     const safetyZonePosition = gameState.safetyZonePosition;
 
-    if (this.state.zones['redZone'] != null) {
-      this.state.app.stage.removeChild(this.state.zones['redZone'])
-    }
-
     const x1 = this.calculatePosition(redZonePosition.x)
     const y1 = this.calculatePosition(redZonePosition.y)
     const r1 = this.calculatePosition(gameState.redZoneRadius)
-
-    const zone1 = new PIXI.Graphics();
-    zone1.beginFill(0xff0000, 0.3);
-    zone1.drawCircle(x1, y1, r1);
-    this.state.app.stage.addChild(zone1);
-    this.state.zones['redZone'] = zone1;
-
-    if (this.state.zones['poisonGasWarning'] != null) {
-      this.state.app.stage.removeChild(this.state.zones['poisonGasWarning'])
-    }
 
     const x2 = this.calculatePosition(poisonGasWarningPosition.x)
     const y2 = this.calculatePosition(poisonGasWarningPosition.y)
     const r2 = this.calculatePosition(gameState.poisonGasWarningRadius)
 
-    const zone2 = new PIXI.Graphics();
-    zone2.lineStyle(3, 0xffffff, 1)
-    zone2.drawCircle(x2, y2, r2);
-    this.state.app.stage.addChild(zone2);
-    this.state.zones['poisonGasWarning'] = zone2;
-
-    if (this.state.zones['safetyZone'] != null) {
-      this.state.app.stage.removeChild(this.state.zones['safetyZone'])
-    }
-
     const x3 = this.calculatePosition(safetyZonePosition.x)
     const y3 = this.calculatePosition(safetyZonePosition.y)
     const r3 = this.calculatePosition(gameState.safetyZoneRadius)
 
-    const zone3 = new PIXI.Graphics();
-    zone3.lineStyle(3, 0x0000ff, 1)
-    zone3.drawCircle(x3, y3, r3);
-    this.state.app.stage.addChild(zone3);
-    this.state.zones['safetyZone'] = zone3;
+    if (this.state.zones['redZone'] == null) {
+      const zone1 = new PIXI.Graphics();
+      zone1.beginFill(0xff0000, 0.3);
+      zone1.drawCircle(x1, y1, r1);
+      this.state.app.stage.addChild(zone1);
+      this.state.zones['redZone'] = zone1;
+    } else {
+      this.state.zones['redZone'].clear()
+      this.state.zones['redZone'].beginFill(0xff0000, 0.3);
+      this.state.zones['redZone'].drawCircle(x1, y1, r1);
+    }
 
+    if (this.state.zones['poisonGasWarning'] == null) {
+      const zone2 = new PIXI.Graphics();
+      zone2.lineStyle(3, 0xffffff, 1)
+      zone2.drawCircle(x2, y2, r2);
+      this.state.app.stage.addChild(zone2);
+      this.state.zones['poisonGasWarning'] = zone2;
+    } else {
+      this.state.zones['poisonGasWarning'].clear()
+      this.state.zones['poisonGasWarning'].lineStyle(3, 0xffffff, 1)
+      this.state.zones['poisonGasWarning'].drawCircle(x2, y2, r2);
+    }
+
+    if (this.state.zones['safetyZone'] == null) {
+      const zone3 = new PIXI.Graphics();
+      zone3.lineStyle(3, 0x0000ff, 1)
+      zone3.drawCircle(x3, y3, r3);
+      this.state.app.stage.addChild(zone3);
+      this.state.zones['safetyZone'] = zone3;
+    } else {
+      this.state.zones['safetyZone'].clear()
+      this.state.zones['safetyZone'].lineStyle(3, 0x0000ff, 1)
+      this.state.zones['safetyZone'].drawCircle(x3, y3, r3);
+    }
   }
 
   setup = () => {
@@ -256,7 +261,7 @@ class ReplayPubg extends React.Component {
 
       if (timeIdx < this.state.replayData.length - 1) timeIdx += 1;
       // console.log(`time: ${timeIdx}`);
-    }, 1);
+    }, 10);
   };
 
   mapResource = mapName => {
@@ -306,7 +311,6 @@ class ReplayPubg extends React.Component {
     await this.setState({
       replayData: data
     });
-    console.log(this.state.mapName);
 
     if (PIXI.loader.resources[this.state.mapName] === undefined)
       PIXI.loader.add(
@@ -324,13 +328,13 @@ class ReplayPubg extends React.Component {
   }
 
   render() {
-    if (this.state.playerStatus === null)
+    if (this.state.playerStatus === null) {
       return (
         <div className="user-list">
           <p>Loading...</p>
         </div>
       );
-
+    }
     return (
       <div>
         <Navigation />
@@ -346,7 +350,7 @@ class ReplayPubg extends React.Component {
                       <div>
                         {item["category"]} : {item["itemId"]}{" , "}
                         {item["stackCount"]} count
-                      </div>
+                        </div>
                     );
                   })}
                 </li>
