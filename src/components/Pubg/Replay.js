@@ -128,10 +128,6 @@ class ReplayPubg extends React.Component {
     newState.players[id]["pixi"].name.x = x - 30;
     newState.players[id]["pixi"].name.y = y - 20;
 
-    if (character.health === 0) {
-      newState.players[id]["pixi"].circle.tint = 0xff0000;
-      newState.survive--;
-    }
     newState.playerStatus[id] = character;
     this.setState(newState);
   };
@@ -235,6 +231,15 @@ class ReplayPubg extends React.Component {
     this.state.app.ticker.add(tickFunc)
   }
 
+  killPlayer = character => {
+    const id = character.accountId;
+
+    let newState = Object.assign({}, this.state);
+    newState.survive--;
+    newState.players[id]["pixi"].circle.tint = 0xff0000;
+    this.setState(newState);
+  }
+
   setup = () => {
     let camp = new PIXI.Sprite(
       PIXI.loader.resources[`${this.state.mapName}`].texture
@@ -275,13 +280,17 @@ class ReplayPubg extends React.Component {
           this.drawGameState(x.gameState);
           break
 
+        case "LogPlayerKill":
+          this.killPlayer(x.victim);
+          break;
+        
         default:
           break;
       }
 
       if (timeIdx < this.state.replayData.length - 1) timeIdx += 1;
       // console.log(`time: ${timeIdx}`);
-    }, 10);
+    }, 4);
   };
 
   mapResource = mapName => {
