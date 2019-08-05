@@ -26,10 +26,42 @@ class ReplayPubg extends React.Component {
     zones: { 'redZone': null, 'poisonGasWarning': null, 'safetyZone': null }
   };
 
+  mapObj = {
+    "Miramar": Miramar,
+    "Vikendi": Vikendi,
+    "Erangel": Erangel,
+    "Erangel_Remastered": Erangel_Remastered,
+    "Campreturn_Jackal": Campreturn_Jackal,
+    "Sanhok": Sanhok
+  }
+
   loadProgressHandler = (loader, resource) => {
     console.log("loading: " + resource.url);
     console.log("progress: " + loader.progress + "%");
   };
+
+  mapResource = mapName => {
+    return this.mapObj[mapName] || mapName;
+  };
+
+  calculatePosition = (x) => {
+    switch (this.state.mapName) {
+      case "Miramar":
+        return x / 816;
+      case "Vikendi":
+        return x / 612;
+      case "Erangel":
+        return x / 816;
+      case "Erangel_Remastered":
+        return x / 816;
+      case "Campreturn_Jackal":
+        return x / 816;
+      case "Sanhok":
+        return x / 408;
+      default:
+        return x;
+    }
+  }
 
   login = character => {
     const id = character.accountId;
@@ -97,25 +129,6 @@ class ReplayPubg extends React.Component {
       this.create(character);
     });
   };
-
-  calculatePosition = (x) => {
-    switch (this.state.mapName) {
-      case "Miramar":
-        return x / 816;
-      case "Vikendi":
-        return x / 612;
-      case "Erangel":
-        return x / 816;
-      case "Erangel_Remastered":
-        return x / 816;
-      case "Campreturn_Jackal":
-        return x / 816;
-      case "Sanhok":
-        return x / 408;
-      default:
-        return x;
-    }
-  }
 
   position = character => {
     const id = character.accountId;
@@ -252,7 +265,7 @@ class ReplayPubg extends React.Component {
       draftState.survive--;
       draftState.players[id]["pixi"].circle.tint = 0xff0000;
     });
-    
+
     this.setState(newState);
   }
 
@@ -307,25 +320,6 @@ class ReplayPubg extends React.Component {
       if (timeIdx < this.state.replayData.length - 1) timeIdx += 1;
       // console.log(`time: ${timeIdx}`);
     }, 4);
-  };
-
-  mapResource = mapName => {
-    switch (mapName) {
-      case "Miramar":
-        return Miramar;
-      case "Vikendi":
-        return Vikendi;
-      case "Erangel":
-        return Erangel;
-      case "Erangel_Remastered":
-        return Erangel_Remastered;
-      case "Campreturn_Jackal":
-        return Campreturn_Jackal;
-      case "Sanhok":
-        return Sanhok;
-      default:
-        return mapName;
-    }
   };
 
   async componentDidMount() {
