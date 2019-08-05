@@ -179,41 +179,60 @@ class ReplayPubg extends React.Component {
     const y3 = this.calculatePosition(safetyZonePosition.y)
     const r3 = this.calculatePosition(gameState.safetyZoneRadius)
 
-    if (this.state.zones['redZone'] == null) {
-      const zone1 = new PIXI.Graphics();
-      zone1.beginFill(0xff0000, 0.3);
-      zone1.drawCircle(x1, y1, r1);
-      this.state.app.stage.addChild(zone1);
-      this.state.zones['redZone'] = zone1;
-    } else {
+    if (this.state.zones['redZone'] != null) {
       this.state.zones['redZone'].clear()
       this.state.zones['redZone'].beginFill(0xff0000, 0.3);
       this.state.zones['redZone'].drawCircle(x1, y1, r1);
     }
 
-    if (this.state.zones['poisonGasWarning'] == null) {
-      const zone2 = new PIXI.Graphics();
-      zone2.lineStyle(3, 0xffffff, 1)
-      zone2.drawCircle(x2, y2, r2);
-      this.state.app.stage.addChild(zone2);
-      this.state.zones['poisonGasWarning'] = zone2;
-    } else {
+    if (this.state.zones['poisonGasWarning'] != null) {
       this.state.zones['poisonGasWarning'].clear()
       this.state.zones['poisonGasWarning'].lineStyle(3, 0xffffff, 1)
       this.state.zones['poisonGasWarning'].drawCircle(x2, y2, r2);
     }
 
-    if (this.state.zones['safetyZone'] == null) {
-      const zone3 = new PIXI.Graphics();
-      zone3.lineStyle(3, 0x0000ff, 1)
-      zone3.drawCircle(x3, y3, r3);
-      this.state.app.stage.addChild(zone3);
-      this.state.zones['safetyZone'] = zone3;
-    } else {
+    if (this.state.zones['safetyZone'] != null) {
+      this.safetyZoneTicker(x3, y3, r3)
+    }
+  }
+
+  initPixiGraphics = () => {
+    const zone1 = new PIXI.Graphics();
+    zone1.beginFill(0xff0000, 0.3);
+    zone1.drawCircle(0, 0, 0);
+    this.state.app.stage.addChild(zone1);
+    this.state.zones['redZone'] = zone1;
+
+    const zone2 = new PIXI.Graphics();
+    zone2.lineStyle(3, 0xffffff, 1)
+    zone2.drawCircle(0, 0, 0);
+    this.state.app.stage.addChild(zone2);
+    this.state.zones['poisonGasWarning'] = zone2;
+
+    const zone3 = new PIXI.Graphics();
+    zone3.lineStyle(3, 0x0000ff, 1)
+    zone3.drawCircle(0, 0, 0);
+    this.state.app.stage.addChild(zone3);
+    this.state.zones['safetyZone'] = zone3;
+  }
+
+  safetyZoneTicker = (x, y, r) => {
+    let currR = this.state.zones['safetyZone'].r || r;
+
+    const tickFunc = () => {
+      currR--;
+
       this.state.zones['safetyZone'].clear()
       this.state.zones['safetyZone'].lineStyle(3, 0x0000ff, 1)
-      this.state.zones['safetyZone'].drawCircle(x3, y3, r3);
+      this.state.zones['safetyZone'].drawCircle(x, y, currR);
+
+      if (currR <= r) {
+        this.state.zones['safetyZone'].r = currR
+        this.state.app.ticker.remove(tickFunc)
+      }
     }
+
+    this.state.app.ticker.add(tickFunc)
   }
 
   setup = () => {
@@ -221,6 +240,7 @@ class ReplayPubg extends React.Component {
       PIXI.loader.resources[`${this.state.mapName}`].texture
     );
     this.state.app.stage.addChild(camp);
+    this.initPixiGraphics()
 
     let timeIdx = 0;
 
