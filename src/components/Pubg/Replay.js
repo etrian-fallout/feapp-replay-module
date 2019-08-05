@@ -9,6 +9,7 @@ import Sanhok from "../../asset/Sanhok_Main_Low_Res.png";
 import Vikendi from "../../asset/Vikendi_Main_Low_Res.png";
 import Campreturn_Jackal from "../../asset/Camp_Jackal_Main_Low_Res.png";
 import CarePackage from "../../asset/CarePackage_Flying.png";
+import produce from "immer"
 
 class ReplayPubg extends React.Component {
   state = {
@@ -33,17 +34,18 @@ class ReplayPubg extends React.Component {
   login = character => {
     const id = character.accountId;
 
-    let newState = Object.assign({}, this.state);
-    newState.players[id] = {};
-    newState.playerStatus = {};
+    const newState = produce(this.state, draftState => {
+      draftState.players[id] = {};
+      draftState.playerStatus = {};
+    });
+
     this.setState(newState);
   };
 
   create = character => {
     const id = character.accountId;
-    const calculated = this.calculatePosition(character.location.x, character.location.y)
-    const x = calculated[0];
-    const y = calculated[1];
+    const x = this.calculatePosition(character.location.x);
+    const y = this.calculatePosition(character.location.y);
 
     let circle = new PIXI.Graphics();
     if (character.name === this.props.match.params.name)
@@ -75,13 +77,16 @@ class ReplayPubg extends React.Component {
     this.state.app.stage.addChild(circle);
     this.state.app.stage.addChild(nameText);
 
-    let newState = Object.assign({}, this.state);
-    newState.players[id]["pixi"] = {
-      circle: circle,
-      name: nameText
-    };
-    newState.playerStatus[id] = character;
-    newState.survive++;
+    const newState = produce(this.state, draftState => {
+      draftState.players[id]["pixi"] = {
+        circle: circle,
+        name: nameText
+      };
+
+      draftState.playerStatus[id] = character;
+      draftState.survive++;
+    });
+
     this.setState(newState);
   };
 
@@ -122,13 +127,15 @@ class ReplayPubg extends React.Component {
     const x = this.calculatePosition(character.location.x)
     const y = this.calculatePosition(character.location.y)
 
-    let newState = Object.assign({}, this.state);
-    newState.players[id]["pixi"].circle.x = x;
-    newState.players[id]["pixi"].circle.y = y;
-    newState.players[id]["pixi"].name.x = x - 30;
-    newState.players[id]["pixi"].name.y = y - 20;
+    const newState = produce(this.state, draftState => {
+      draftState.players[id]["pixi"].circle.x = x;
+      draftState.players[id]["pixi"].circle.y = y;
+      draftState.players[id]["pixi"].name.x = x - 30;
+      draftState.players[id]["pixi"].name.y = y - 20;
 
-    newState.playerStatus[id] = character;
+      draftState.playerStatus[id] = character;
+    });
+
     this.setState(newState);
   };
 
@@ -136,6 +143,7 @@ class ReplayPubg extends React.Component {
     const isGame = carePackage.common.isGame;
     const x = this.calculatePosition(carePackage.itemPackage.location.x)
     const y = this.calculatePosition(carePackage.itemPackage.location.y)
+    let newState = undefined;
 
     if (this.state.carePackages[isGame] === undefined) {
       let packageImage = new PIXI.Sprite.from(CarePackage);
@@ -146,16 +154,18 @@ class ReplayPubg extends React.Component {
 
       this.state.app.stage.addChild(packageImage);
 
-      let newState = Object.assign({}, this.state);
-      newState.carePackages[isGame] = packageImage;
-      newState.carePackageStatus[isGame] = carePackage;
-      this.setState(newState);
-      return;
+      newState = produce(this.state, draftState => {
+        draftState.carePackages[isGame] = packageImage;
+        draftState.carePackageStatus[isGame] = carePackage;
+      });
+    } else {
+      newState = produce(this.state, draftState => {
+        draftState.carePackages[isGame].x = x;
+        draftState.carePackages[isGame].y = y;
+      });
     }
 
-    let newState = Object.assign({}, this.state);
-    newState.carePackages[isGame].x = x;
-    newState.carePackages[isGame].y = y;
+    this.setState(newState);
   };
 
   drawGameState = (gameState) => {
@@ -223,7 +233,11 @@ class ReplayPubg extends React.Component {
       this.state.zones['safetyZone'].drawCircle(x, y, currR);
 
       if (currR <= r) {
-        this.state.zones['safetyZone'].r = currR
+        const nextState = produce(this.state, draftState => {
+          draftState.zones['safetyZone'].r = currR;
+        });
+
+        this.setState(nextState);
         this.state.app.ticker.remove(tickFunc)
       }
     }
@@ -234,9 +248,11 @@ class ReplayPubg extends React.Component {
   killPlayer = character => {
     const id = character.accountId;
 
-    let newState = Object.assign({}, this.state);
-    newState.survive--;
-    newState.players[id]["pixi"].circle.tint = 0xff0000;
+    const newState = produce(this.state, draftState => {
+      draftState.survive--;
+      draftState.players[id]["pixi"].circle.tint = 0xff0000;
+    });
+    
     this.setState(newState);
   }
 
@@ -283,7 +299,7 @@ class ReplayPubg extends React.Component {
         case "LogPlayerKill":
           this.killPlayer(x.victim);
           break;
-        
+
         default:
           break;
       }
@@ -389,7 +405,7 @@ class ReplayPubg extends React.Component {
         </div>
         <div className="user-list">
           <ul>
-          {Object.entries(this.state.playerStatus)
+            {Object.entries(this.state.playerStatus)
               .filter(user => user[1].name === this.props.match.params.name)
               .map(user => {
                 return (
