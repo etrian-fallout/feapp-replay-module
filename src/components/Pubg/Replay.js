@@ -389,31 +389,37 @@ class ReplayPubg extends React.Component {
         </div>
         <div className="user-list">
           <ul>
-            {Object.entries(this.state.playerStatus).map(user => {
-              if (user[1].name === this.props.match.params.name)
+          {Object.entries(this.state.playerStatus)
+              .filter(user => user[1].name === this.props.match.params.name)
+              .map(user => {
                 return (
                   <li key={user[0]}>
                     <div className="searched-user">{user[1].name}</div>
                     <div>Health : {user[1].health.toFixed(2)}</div>
                     <div>
-                      location : {this.calculatePosition(user[1].location.x).toFixed(0)} ,{" "}
+                      location :{" "}
+                      {this.calculatePosition(user[1].location.x).toFixed(0)} ,{" "}
                       {this.calculatePosition(user[1].location.y).toFixed(0)}
                     </div>
                   </li>
                 );
-              else {
+              })}
+
+            {Object.entries(this.state.playerStatus)
+              .filter(user => user[1].name !== this.props.match.params.name)
+              .map(user => {
                 return (
                   <li key={user[0]}>
                     <div className="other-users">{user[1].name}</div>
                     <div>Health : {user[1].health.toFixed(2)}</div>
                     <div>
-                      location : {this.calculatePosition(user[1].location.x).toFixed(0)} ,{" "}
+                      location :{" "}
+                      {this.calculatePosition(user[1].location.x).toFixed(0)} ,{" "}
                       {this.calculatePosition(user[1].location.y).toFixed(0)}
                     </div>
                   </li>
                 );
-              }
-            })}
+              })}
           </ul>
         </div>
       </div>
