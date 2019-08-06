@@ -2,6 +2,9 @@
   "name": "feapp-replay-module",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "10.2.1"
+  },
   "dependencies": {
     "@inlet/react-pixi": "^1.0.2",
     "immer": "^3.2.0",
