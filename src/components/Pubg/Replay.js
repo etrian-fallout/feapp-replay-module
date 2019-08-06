@@ -140,17 +140,63 @@ class ReplayPubg extends React.Component {
     const x = this.calculatePosition(character.location.x)
     const y = this.calculatePosition(character.location.y)
 
+    this.positionTicker(x, y, id);
     const newState = produce(this.state, draftState => {
-      draftState.players[id]["pixi"].circle.x = x;
-      draftState.players[id]["pixi"].circle.y = y;
-      draftState.players[id]["pixi"].name.x = x - 30;
-      draftState.players[id]["pixi"].name.y = y - 20;
-
       draftState.playerStatus[id] = character;
     });
 
     this.setState(newState);
   };
+
+  positionTicker = (targetX, targetY, playerId) => {
+    const drFunc = x => { if (x) return 1; else return -1; }
+
+    let circleX = this.state.players[playerId]["pixi"].circle.x
+    let circleY = this.state.players[playerId]["pixi"].circle.y
+    let nameX = this.state.players[playerId]["pixi"].name.x
+    let nameY = this.state.players[playerId]["pixi"].name.y
+
+    const circleDx = drFunc(circleX < targetX)
+    const circleDy = drFunc(circleY < targetY)
+    const nameDx = drFunc(nameX < targetX - 30)
+    const nameDy = drFunc(nameY < targetY - 20)
+
+    const positionFunc = () => {
+      if (circleDx * (this.state.players[playerId]["pixi"].circle.x - targetX) < 0) {
+        this.state.players[playerId]["pixi"].circle.x += circleDx;
+      }
+
+      if (circleDy * (this.state.players[playerId]["pixi"].circle.y - targetY) < 0) {
+        this.state.players[playerId]["pixi"].circle.y += circleDy;
+      }
+
+      if (nameDx * (this.state.players[playerId]["pixi"].name.x - (targetX - 30)) < 0) {
+        this.state.players[playerId]["pixi"].name.x += nameDx;
+      }
+
+      if (nameDy * (this.state.players[playerId]["pixi"].name.y - (targetY - 20)) < 0) {
+        this.state.players[playerId]["pixi"].name.y += nameDy;
+      }
+
+      if (~~this.state.players[playerId]["pixi"].circle.x == ~~targetX
+        && ~~this.state.players[playerId]["pixi"].circle.y == ~~targetY
+        && ~~this.state.players[playerId]["pixi"].name.x == ~~(targetX - 30)
+        && ~~this.state.players[playerId]["pixi"].name.y == ~~(targetY - 20)) {
+
+        const newState = produce(this.state, draftState => {
+          draftState.players[playerId]["pixi"].circle.x = targetX;
+          draftState.players[playerId]["pixi"].circle.y = targetY;
+          draftState.players[playerId]["pixi"].name.x = targetX - 30;
+          draftState.players[playerId]["pixi"].name.y = targetY - 20;
+        })
+
+        this.setState(newState);
+        this.state.app.ticker.remove(positionFunc);
+      }
+    }
+
+    this.state.app.ticker.add(positionFunc);
+  }
 
   manageCarePackage = carePackage => {
     const isGame = carePackage.common.isGame;
@@ -251,11 +297,11 @@ class ReplayPubg extends React.Component {
         });
 
         this.setState(nextState);
-        this.state.app.ticker.remove(tickFunc)
+        this.state.app.ticker.remove(tickFunc);
       }
     }
 
-    this.state.app.ticker.add(tickFunc)
+    this.state.app.ticker.add(tickFunc);
   }
 
   killPlayer = character => {
