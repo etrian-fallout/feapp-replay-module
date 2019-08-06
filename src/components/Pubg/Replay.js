@@ -266,19 +266,24 @@ class ReplayPubg extends React.Component {
     zone1.beginFill(0xff0000, 0.3);
     zone1.drawCircle(0, 0, 0);
     this.state.app.stage.addChild(zone1);
-    this.state.zones['redZone'] = zone1;
-
+    
     const zone2 = new PIXI.Graphics();
     zone2.lineStyle(3, 0xffffff, 1)
     zone2.drawCircle(0, 0, 0);
     this.state.app.stage.addChild(zone2);
-    this.state.zones['poisonGasWarning'] = zone2;
-
+    
     const zone3 = new PIXI.Graphics();
     zone3.lineStyle(3, 0x0000ff, 1)
     zone3.drawCircle(0, 0, 0);
     this.state.app.stage.addChild(zone3);
-    this.state.zones['safetyZone'] = zone3;
+
+    const newState = produce(this.state, draftState => {
+      draftState.zones['redZone'] = zone1;
+      draftState.zones['poisonGasWarning'] = zone2;
+      draftState.zones['safetyZone'] = zone3;  
+    });
+
+    this.setState(newState);
   }
 
   safetyZoneTicker = (x, y, r) => {
