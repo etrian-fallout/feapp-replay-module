@@ -9,6 +9,7 @@ import Sanhok from "../../asset/Sanhok_Main_Low_Res.png";
 import Vikendi from "../../asset/Vikendi_Main_Low_Res.png";
 import Campreturn_Jackal from "../../asset/Camp_Jackal_Main_Low_Res.png";
 import CarePackage from "../../asset/CarePackage_Flying.png";
+import produce from "immer"
 
 class ReplayPubg extends React.Component {
   state = {
@@ -25,25 +26,58 @@ class ReplayPubg extends React.Component {
     zones: { 'redZone': null, 'poisonGasWarning': null, 'safetyZone': null }
   };
 
+  mapObj = {
+    "Miramar": Miramar,
+    "Vikendi": Vikendi,
+    "Erangel": Erangel,
+    "Erangel_Remastered": Erangel_Remastered,
+    "Campreturn_Jackal": Campreturn_Jackal,
+    "Sanhok": Sanhok
+  }
+
   loadProgressHandler = (loader, resource) => {
     console.log("loading: " + resource.url);
     console.log("progress: " + loader.progress + "%");
   };
 
+  mapResource = mapName => {
+    return this.mapObj[mapName] || mapName;
+  };
+
+  calculatePosition = (x) => {
+    switch (this.state.mapName) {
+      case "Miramar":
+        return x / 816;
+      case "Vikendi":
+        return x / 612;
+      case "Erangel":
+        return x / 816;
+      case "Erangel_Remastered":
+        return x / 816;
+      case "Campreturn_Jackal":
+        return x / 816;
+      case "Sanhok":
+        return x / 408;
+      default:
+        return x;
+    }
+  }
+
   login = character => {
     const id = character.accountId;
 
-    let newState = Object.assign({}, this.state);
-    newState.players[id] = {};
-    newState.playerStatus = {};
+    const newState = produce(this.state, draftState => {
+      draftState.players[id] = {};
+      draftState.playerStatus = {};
+    });
+
     this.setState(newState);
   };
 
   create = character => {
     const id = character.accountId;
-    const calculated = this.calculatePosition(character.location.x, character.location.y)
-    const x = calculated[0];
-    const y = calculated[1];
+    const x = this.calculatePosition(character.location.x);
+    const y = this.calculatePosition(character.location.y);
 
     let circle = new PIXI.Graphics();
     if (character.name === this.props.match.params.name)
@@ -75,13 +109,16 @@ class ReplayPubg extends React.Component {
     this.state.app.stage.addChild(circle);
     this.state.app.stage.addChild(nameText);
 
-    let newState = Object.assign({}, this.state);
-    newState.players[id]["pixi"] = {
-      circle: circle,
-      name: nameText
-    };
-    newState.playerStatus[id] = character;
-    newState.survive++;
+    const newState = produce(this.state, draftState => {
+      draftState.players[id]["pixi"] = {
+        circle: circle,
+        name: nameText
+      };
+
+      draftState.playerStatus[id] = character;
+      draftState.survive++;
+    });
+
     this.setState(newState);
   };
 
@@ -93,25 +130,6 @@ class ReplayPubg extends React.Component {
     });
   };
 
-  calculatePosition = (x) => {
-    switch (this.state.mapName) {
-      case "Miramar":
-        return x / 816;
-      case "Vikendi":
-        return x / 612;
-      case "Erangel":
-        return x / 816;
-      case "Erangel_Remastered":
-        return x / 816;
-      case "Campreturn_Jackal":
-        return x / 816;
-      case "Sanhok":
-        return x / 408;
-      default:
-        return x;
-    }
-  }
-
   position = character => {
     const id = character.accountId;
 
@@ -122,20 +140,69 @@ class ReplayPubg extends React.Component {
     const x = this.calculatePosition(character.location.x)
     const y = this.calculatePosition(character.location.y)
 
-    let newState = Object.assign({}, this.state);
-    newState.players[id]["pixi"].circle.x = x;
-    newState.players[id]["pixi"].circle.y = y;
-    newState.players[id]["pixi"].name.x = x - 30;
-    newState.players[id]["pixi"].name.y = y - 20;
+    this.positionTicker(x, y, id);
+    const newState = produce(this.state, draftState => {
+      draftState.playerStatus[id] = character;
+    });
 
-    newState.playerStatus[id] = character;
     this.setState(newState);
   };
+
+  positionTicker = (targetX, targetY, playerId) => {
+    const drFunc = x => { if (x) return 1; else return -1; }
+
+    let circleX = this.state.players[playerId]["pixi"].circle.x
+    let circleY = this.state.players[playerId]["pixi"].circle.y
+    let nameX = this.state.players[playerId]["pixi"].name.x
+    let nameY = this.state.players[playerId]["pixi"].name.y
+
+    const circleDx = drFunc(circleX < targetX)
+    const circleDy = drFunc(circleY < targetY)
+    const nameDx = drFunc(nameX < targetX - 30)
+    const nameDy = drFunc(nameY < targetY - 20)
+
+    const positionFunc = () => {
+      if (circleDx * (this.state.players[playerId]["pixi"].circle.x - targetX) < 0) {
+        this.state.players[playerId]["pixi"].circle.x += circleDx;
+      }
+
+      if (circleDy * (this.state.players[playerId]["pixi"].circle.y - targetY) < 0) {
+        this.state.players[playerId]["pixi"].circle.y += circleDy;
+      }
+
+      if (nameDx * (this.state.players[playerId]["pixi"].name.x - (targetX - 30)) < 0) {
+        this.state.players[playerId]["pixi"].name.x += nameDx;
+      }
+
+      if (nameDy * (this.state.players[playerId]["pixi"].name.y - (targetY - 20)) < 0) {
+        this.state.players[playerId]["pixi"].name.y += nameDy;
+      }
+
+      if (~~this.state.players[playerId]["pixi"].circle.x == ~~targetX
+        && ~~this.state.players[playerId]["pixi"].circle.y == ~~targetY
+        && ~~this.state.players[playerId]["pixi"].name.x == ~~(targetX - 30)
+        && ~~this.state.players[playerId]["pixi"].name.y == ~~(targetY - 20)) {
+
+        const newState = produce(this.state, draftState => {
+          draftState.players[playerId]["pixi"].circle.x = targetX;
+          draftState.players[playerId]["pixi"].circle.y = targetY;
+          draftState.players[playerId]["pixi"].name.x = targetX - 30;
+          draftState.players[playerId]["pixi"].name.y = targetY - 20;
+        })
+
+        this.setState(newState);
+        this.state.app.ticker.remove(positionFunc);
+      }
+    }
+
+    this.state.app.ticker.add(positionFunc);
+  }
 
   manageCarePackage = carePackage => {
     const isGame = carePackage.common.isGame;
     const x = this.calculatePosition(carePackage.itemPackage.location.x)
     const y = this.calculatePosition(carePackage.itemPackage.location.y)
+    let newState = undefined;
 
     if (this.state.carePackages[isGame] === undefined) {
       let packageImage = new PIXI.Sprite.from(CarePackage);
@@ -146,16 +213,18 @@ class ReplayPubg extends React.Component {
 
       this.state.app.stage.addChild(packageImage);
 
-      let newState = Object.assign({}, this.state);
-      newState.carePackages[isGame] = packageImage;
-      newState.carePackageStatus[isGame] = carePackage;
-      this.setState(newState);
-      return;
+      newState = produce(this.state, draftState => {
+        draftState.carePackages[isGame] = packageImage;
+        draftState.carePackageStatus[isGame] = carePackage;
+      });
+    } else {
+      newState = produce(this.state, draftState => {
+        draftState.carePackages[isGame].x = x;
+        draftState.carePackages[isGame].y = y;
+      });
     }
 
-    let newState = Object.assign({}, this.state);
-    newState.carePackages[isGame].x = x;
-    newState.carePackages[isGame].y = y;
+    this.setState(newState);
   };
 
   drawGameState = (gameState) => {
@@ -197,19 +266,24 @@ class ReplayPubg extends React.Component {
     zone1.beginFill(0xff0000, 0.3);
     zone1.drawCircle(0, 0, 0);
     this.state.app.stage.addChild(zone1);
-    this.state.zones['redZone'] = zone1;
-
+    
     const zone2 = new PIXI.Graphics();
     zone2.lineStyle(3, 0xffffff, 1)
     zone2.drawCircle(0, 0, 0);
     this.state.app.stage.addChild(zone2);
-    this.state.zones['poisonGasWarning'] = zone2;
-
+    
     const zone3 = new PIXI.Graphics();
     zone3.lineStyle(3, 0x0000ff, 1)
     zone3.drawCircle(0, 0, 0);
     this.state.app.stage.addChild(zone3);
-    this.state.zones['safetyZone'] = zone3;
+
+    const newState = produce(this.state, draftState => {
+      draftState.zones['redZone'] = zone1;
+      draftState.zones['poisonGasWarning'] = zone2;
+      draftState.zones['safetyZone'] = zone3;  
+    });
+
+    this.setState(newState);
   }
 
   safetyZoneTicker = (x, y, r) => {
@@ -223,20 +297,26 @@ class ReplayPubg extends React.Component {
       this.state.zones['safetyZone'].drawCircle(x, y, currR);
 
       if (currR <= r) {
-        this.state.zones['safetyZone'].r = currR
-        this.state.app.ticker.remove(tickFunc)
+        const nextState = produce(this.state, draftState => {
+          draftState.zones['safetyZone'].r = currR;
+        });
+
+        this.setState(nextState);
+        this.state.app.ticker.remove(tickFunc);
       }
     }
 
-    this.state.app.ticker.add(tickFunc)
+    this.state.app.ticker.add(tickFunc);
   }
 
   killPlayer = character => {
     const id = character.accountId;
 
-    let newState = Object.assign({}, this.state);
-    newState.survive--;
-    newState.players[id]["pixi"].circle.tint = 0xff0000;
+    const newState = produce(this.state, draftState => {
+      draftState.survive--;
+      draftState.players[id]["pixi"].circle.tint = 0xff0000;
+    });
+
     this.setState(newState);
   }
 
@@ -283,7 +363,7 @@ class ReplayPubg extends React.Component {
         case "LogPlayerKill":
           this.killPlayer(x.victim);
           break;
-        
+
         default:
           break;
       }
@@ -291,25 +371,6 @@ class ReplayPubg extends React.Component {
       if (timeIdx < this.state.replayData.length - 1) timeIdx += 1;
       // console.log(`time: ${timeIdx}`);
     }, 4);
-  };
-
-  mapResource = mapName => {
-    switch (mapName) {
-      case "Miramar":
-        return Miramar;
-      case "Vikendi":
-        return Vikendi;
-      case "Erangel":
-        return Erangel;
-      case "Erangel_Remastered":
-        return Erangel_Remastered;
-      case "Campreturn_Jackal":
-        return Campreturn_Jackal;
-      case "Sanhok":
-        return Sanhok;
-      default:
-        return mapName;
-    }
   };
 
   async componentDidMount() {
@@ -389,7 +450,7 @@ class ReplayPubg extends React.Component {
         </div>
         <div className="user-list">
           <ul>
-          {Object.entries(this.state.playerStatus)
+            {Object.entries(this.state.playerStatus)
               .filter(user => user[1].name === this.props.match.params.name)
               .map(user => {
                 return (
