@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@inlet/react-pixi": "^1.0.2",
-    "immer": "^3.2.0",
+    "immer": "^8.0.1",
     "pixi.js": "4.5.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
